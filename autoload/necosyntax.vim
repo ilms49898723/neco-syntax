@@ -72,8 +72,7 @@ function! s:make_cache_from_syntax(filetype) abort
       let line = substitute(line, '^\S\+\s*xxx', '', '')
     endif
 
-    if line =~ 'Syntax items' || line =~ '^\s*links to' ||
-          \ line =~ '^\s*nextgroup='
+    if line =~ 'Syntax items' || line =~ '^\s*links to'
       " Next line.
       continue
     endif

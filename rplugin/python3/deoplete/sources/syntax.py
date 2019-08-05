@@ -17,6 +17,7 @@ class Source(Base):
 
         self.name = 'syntax'
         self.mark = '[S]'
+        self.events = None
         self.included_syntax = {}
         self.vim.call('necosyntax#initialize')
 

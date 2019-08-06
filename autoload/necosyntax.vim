@@ -69,10 +69,12 @@ function! s:make_cache_from_syntax(filetype) abort
     if line =~ '^\h\w\+'
       " Change syntax group name.
       let group_name = matchstr(line, '^\S\+')
-      let line = substitute(line, '^\S\+\s*xxx', '', '')
+      let line = substitute(line, '^\S\+\s*', '', '')
+      let line = substitute(line, '^\s*xxx', '', '')
     endif
 
-    if line =~ 'Syntax items' || line =~ '^\s*links to'
+    if line =~ 'Syntax items' || line =~ '^\s*links to' ||
+     \ line =~ '^\s*cluster'
       " Next line.
       continue
     endif
@@ -87,10 +89,10 @@ function! s:make_cache_from_syntax(filetype) abort
             \ matchstr(line, '/\zs[^/]\+\ze/'))
     elseif line =~ '^\s*start='
       let line =
-            \s:substitute_candidate(
-            \   matchstr(line, 'start=/\zs[^/]\+\ze/')) . ' ' .
-            \s:substitute_candidate(
-            \   matchstr(line, 'end=/zs[^/]\+\ze/'))
+            \ s:substitute_candidate(
+            \    matchstr(line, 'start=/\zs[^/]\+\ze/')) . ' ' .
+            \ s:substitute_candidate(
+            \    matchstr(line, 'end=/zs[^/]\+\ze/'))
     endif
 
     " Add keywords.
@@ -100,7 +102,7 @@ function! s:make_cache_from_syntax(filetype) abort
     while match_str != ''
       " Ignore too short keyword.
       if len(match_str) >= g:necosyntax#min_keyword_length
-            \&& match_str =~ '^[[:print:]]\+$'
+            \ && match_str =~ '^[[:print:]]\+$'
         call add(keyword_list, match_str)
       endif
 
@@ -120,14 +122,14 @@ function! s:substitute_candidate(candidate) abort
 
   " Collection.
   let candidate = substitute(candidate,
-        \'\\\@<!\[[^\]]*\]', ' ', 'g')
+        \ '\\\@<!\[[^\]]*\]', ' ', 'g')
 
   " Delete.
   let candidate = substitute(candidate,
-        \'\\\@<!\%(\\[=?+]\|\\%[\|\\s\*\)', '', 'g')
+        \ '\\\@<!\%(\\[=?+]\|\\%[\|\\s\*\)', '', 'g')
   " Space.
   let candidate = substitute(candidate,
-        \'\\\@<!\%(\\[<>{}]\|[$^]\|\\z\?\a\)', ' ', 'g')
+        \ '\\\@<!\%(\\[<>{}]\|[$^]\|\\z\?\a\)', ' ', 'g')
 
   if candidate =~ '\\%\?('
     let candidate = join(necosyntax#_split_pattern(

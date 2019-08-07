@@ -95,6 +95,10 @@ function! s:make_cache_from_syntax(filetype) abort
             \    matchstr(line, 'end=/zs[^/]\+\ze/'))
     endif
 
+    " Clear leading and trailing whitespace
+    let line = substitute(line, '^\s*', '', '')
+    let line = substitute(line, '\s*$', '', '')
+
     " Add keywords.
     let match_num = 0
     let match_str = matchstr(line, keyword_pattern, match_num)
@@ -103,6 +107,7 @@ function! s:make_cache_from_syntax(filetype) abort
       " Ignore too short keyword.
       if len(match_str) >= g:necosyntax#min_keyword_length
             \ && match_str =~ '^[[:print:]]\+$'
+            \ && match_str =~ '[A-Za-z]\+'
         call add(keyword_list, match_str)
       endif
 

@@ -111,7 +111,7 @@ function! s:make_cache_from_syntax(filetype) abort
         call add(keyword_list, match_str)
       endif
 
-      let match_num += len(match_str)
+      let match_num = match(line, match_str, match_num) + len(match_str)
 
       let match_str = matchstr(line, keyword_pattern, match_num)
     endwhile

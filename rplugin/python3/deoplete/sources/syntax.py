@@ -4,6 +4,7 @@
 # License: MIT license
 #=============================================================================
 
+import string
 import typing
 
 from deoplete.base.source import Base
@@ -21,9 +22,21 @@ class Source(Base):
         self.included_syntax = {}
         self.vim.call('necosyntax#initialize')
 
+        self.syntax_blacklist = set()
+        for x in string.ascii_lowercase + string.hexdigits:
+            self.syntax_blacklist.add('_{}'.format(x))
+            self.syntax_blacklist.add('{}_'.format(x))
+        for x in string.ascii_lowercase:
+            self.syntax_blacklist.add('z{}'.format(x))
+            for y in string.digits:
+                self.syntax_blacklist.add('{}{}'.format(x, y))
+        self.syntax_blacklist.add('__')
+        self.syntax_blacklist.add('abfnrtv')
+
     def on_event(self, context: UserContext) -> None:
         syntax_candidates = [{'word': x} for x in
-            self.vim.call('necosyntax#gather_candidates')]
+            self.vim.call('necosyntax#gather_candidates')
+            if x.lower() not in self.syntax_blacklist and 'abfnrtv' not in x.lower()]
         syntax_candidates = sorted(syntax_candidates, key=lambda x: x['word'].swapcase())
         self.included_syntax[context['filetype']] = syntax_candidates
 

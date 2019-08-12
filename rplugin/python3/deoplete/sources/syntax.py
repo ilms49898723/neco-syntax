@@ -22,9 +22,10 @@ class Source(Base):
         self.vim.call('necosyntax#initialize')
 
     def on_event(self, context: UserContext) -> None:
-        self.included_syntax[context['filetype']] = [
-            { 'word': x } for x in
+        syntax_candidates = [{'word': x} for x in
             self.vim.call('necosyntax#gather_candidates')]
+        syntax_candidates = sorted(syntax_candidates, key=lambda x: x['word'].swapcase())
+        self.included_syntax[context['filetype']] = syntax_candidates
 
     def gather_candidates(self, context: UserContext) -> Candidates:
         return self.included_syntax.get(context['filetype'], [])

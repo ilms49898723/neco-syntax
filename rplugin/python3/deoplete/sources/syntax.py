@@ -42,7 +42,7 @@ class Source(Base):
                 if len(matched) >= 2 and matched[0] not in string.digits:
                     keywords.append(matched)
 
-        return sorted(list(set(keywords)))
+        return list(set(keywords))
 
     def parse_line(self, line):
         if re.match(r'^\w*', line):
@@ -60,8 +60,10 @@ class Source(Base):
         line = re.sub(r'^\s*nextgroup=\S+', ' ', line)
         line = re.sub(r'contains=\S+', ' ', line)
 
-        if re.match(r'^\s*match', line):
+        if re.match(r'^\s*match\s', line):
             line = self.parse_match(line)
+        elif re.match(r'^\s*matchgroup=', line):
+            line = self.parse_region(line)
         elif re.match(r'^\s*start=', line):
             line = self.parse_region(line)
 
@@ -118,9 +120,6 @@ class Source(Base):
             return '/'
 
     def parse_match(self, line):
-        if re.match(r'^\s*matchgroup=', line):
-            return ' '
-
         surround_char = self.parse_surround_char(r'match\s+(.)', line)
         matches = re.search(r'match\s+[{0}]([^{0}]*)[{0}]'.format(surround_char), line)
         if matches is None:

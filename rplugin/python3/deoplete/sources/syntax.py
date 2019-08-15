@@ -82,7 +82,7 @@ class Source(Base):
 
         line = line.replace('\\\\', ' ')
         line = re.sub(r'\\.', ' ', line)
-        line = re.sub(r'\[[^\]]*\]', ' ', line)
+        line = re.sub(r'\[.[^\]]*\]', ' ', line)
 
         return line
 

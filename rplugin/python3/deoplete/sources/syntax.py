@@ -1,6 +1,7 @@
 #=============================================================================
 # FILE: syntax.py
 # AUTHOR:  Shougo Matsushita <Shougo.Matsu at gmail.com>
+# MODIFIED: LittleBird
 # License: MIT license
 #=============================================================================
 
@@ -52,13 +53,14 @@ class Source(Base):
         if 'Syntax items' in line or re.match(r'^\s*links to', line) or re.match(r'^\s*cluster', line):
             return None
 
+        line = re.sub(r'^\s*nextgroup=\S+', ' ', line)
+        line = re.sub(r'containedin=\S+', ' ', line)
+        line = re.sub(r'contains=\S+', ' ', line)
+
         line = line.replace('contained', ' ')
         line = line.replace('oneline', ' ')
         line = line.replace('skipwhite', ' ')
         line = line.replace('skipnl', ' ')
-
-        line = re.sub(r'^\s*nextgroup=\S+', ' ', line)
-        line = re.sub(r'contains=\S+', ' ', line)
 
         if re.match(r'^\s*match\s', line):
             line = self.parse_match(line)
@@ -68,6 +70,42 @@ class Source(Base):
             line = self.parse_region(line)
 
         return line
+
+    def parse_charset(self, line):
+        line = line.replace('\\\\', ' ')
+        line = line.replace('\\]', ' ')
+        for clsexpr in ['alnum', 'alpha', 'blank', 'cntrl', 'digit', 'graph',
+                        'lower', 'print', 'punct', 'space', 'upper', 'xdigit',
+                        'return', 'tab', 'escape', 'backspace']:
+            line = line.replace('[:{}:]'.format(clsexpr), ' ')
+
+        line_queue = queue.Queue()
+        line_queue.put_nowait(line)
+
+        charset_patterns = [r'\w(\[.[^\]]*\])', r'(\[.[^\]]*\])\w',
+                            r'\w\\[_%]?(\[.[^\]]*\])', r'\\[_%]?(\[.[^\]]*\])\w']
+        results = []
+        while not line_queue.empty():
+            top = line_queue.get_nowait()
+            for charset_pattern in charset_patterns:
+                matches = re.search(charset_pattern, top)
+                if matches:
+                    break
+            else:
+                results.append(top)
+                continue
+
+            expanded = False
+            pattern = matches.group(1)
+            charset = re.search(r'\[(.[^\]]*)\]', pattern).group(1)
+            for char in string.ascii_letters + string.digits:
+                if re.match(r'[{}]'.format(charset), char):
+                    line_queue.put_nowait(top.replace(pattern, char, 1))
+                    expanded = True
+            if not expanded:
+                results.append(top)
+
+        return ' '.join(results)
 
     def parse_specials(self, line):
         line = re.sub(r"\\%[<>]?'.", ' ', line)
@@ -84,7 +122,7 @@ class Source(Base):
 
         line = line.replace('\\\\', ' ')
         line = re.sub(r'\\.', ' ', line)
-        line = re.sub(r'\[.[^\]]*\]', ' ', line)
+        line = re.sub(r'(\\[_%]?)?\[.[^\]]*\]', ' ', line)
 
         return line
 
@@ -127,6 +165,7 @@ class Source(Base):
 
         line = matches.group(1)
         line = self.parse_pairs(line)
+        line = self.parse_charset(line)
         line = self.parse_specials(line)
 
         return line
@@ -136,18 +175,21 @@ class Source(Base):
         starts = re.findall(r'start=[{0}]([^{0}]*)[{0}]'.format(surround_char), line)
         for i in range(len(starts)):
             starts[i] = self.parse_pairs(starts[i])
+            starts[i] = self.parse_charset(starts[i])
             starts[i] = self.parse_specials(starts[i])
 
         surround_char = self.parse_surround_char(r'skip=(.)', line)
         skips = re.findall(r'skip=[{0}]([^{0}]*)[{0}]'.format(surround_char), line)
         for i in range(len(skips)):
             skips[i] = self.parse_pairs(skips[i])
+            skips[i] = self.parse_charset(skips[i])
             skips[i] = self.parse_specials(skips[i])
 
         surround_char = self.parse_surround_char(r'end=(.)', line)
         ends = re.findall(r'end=[{0}]([^{0}]*)[{0}]'.format(surround_char), line)
         for i in range(len(ends)):
             ends[i] = self.parse_pairs(ends[i])
+            ends[i] = self.parse_charset(ends[i])
             ends[i] = self.parse_specials(ends[i])
 
         line = ' '.join(starts + skips + ends)

@@ -25,6 +25,8 @@ class Source(Base):
         self.included_syntax = {}
         self.vim.call('necosyntax#initialize')
 
+        self.included_syntax['vim'] = list()
+
     def parse_syntax(self, context):
         syntax_lines = self.vim.eval('execute("syntax list")')
 

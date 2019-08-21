@@ -11,8 +11,11 @@ import string
 import typing
 
 from deoplete.base.source import Base
-from deoplete.util import parse_buffer_pattern, getlines
-from deoplete.util import Nvim, UserContext, Candidates
+from deoplete.util import Candidates
+from deoplete.util import Nvim
+from deoplete.util import UserContext
+from deoplete.util import getlines
+from deoplete.util import parse_buffer_pattern
 
 
 class Source(Base):

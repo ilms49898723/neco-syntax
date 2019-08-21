@@ -104,9 +104,12 @@ class Source(Base):
             pattern = matches.group(1)
             charset = re.search(r'\[(.[^\]]*)\]', pattern).group(1)
             for char in string.ascii_letters + string.digits:
-                if re.match(r'[{}]'.format(charset), char):
-                    line_queue.put_nowait(top.replace(pattern, char, 1))
-                    expanded = True
+                try:
+                    if re.match(r'[{}]'.format(charset), char):
+                        line_queue.put_nowait(top.replace(pattern, char, 1))
+                        expanded = True
+                except:
+                    break
             if not expanded:
                 results.append(top)
 

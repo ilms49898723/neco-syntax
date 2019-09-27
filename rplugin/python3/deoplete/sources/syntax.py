@@ -91,6 +91,9 @@ class Source(Base):
                             r'\w\\[_%]?(\[.[^\]]*\])', r'\\[_%]?(\[.[^\]]*\])\w']
         results = []
         while not line_queue.empty():
+            if len(results) > 1024 or line_queue.qsize() > 1024:
+                results = []
+                break
             top = line_queue.get_nowait()
             for charset_pattern in charset_patterns:
                 matches = re.search(charset_pattern, top)
@@ -143,6 +146,9 @@ class Source(Base):
         pair_patterns = [r'\\\((.*)\\\)', r'\\z\((.*)\\\)', r'\\%\((.*)\\\)']
         results = []
         while not line_queue.empty():
+            if len(results) > 1024 or line_queue.qsize() > 1024:
+                results = []
+                break
             top = line_queue.get_nowait()
             for pair_pattern in pair_patterns:
                 matches = re.search(pair_pattern, top)
